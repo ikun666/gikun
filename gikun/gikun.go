@@ -1,36 +1,33 @@
 package gikun
 
 import (
-	"fmt"
 	"net/http"
-	"time"
 )
 
-type HandleFunc func(http.ResponseWriter, *http.Request)
+type HandlerFunc func(*Context)
 type Engine struct {
-	router map[string]HandleFunc
+	router *router
 }
 
 // 创建Engine实例
 func New() *Engine {
 	return &Engine{
-		router: make(map[string]HandleFunc),
+		router: newRouter(),
 	}
 }
 
 // 添加路由
-func (e *Engine) addRoute(method, path string, hander HandleFunc) {
-	key := method + "-" + path
-	e.router[key] = hander
+func (e *Engine) addRoute(method, path string, hander HandlerFunc) {
+	e.router.addRoute(method, path, hander)
 }
 
 // 封装GET
-func (e *Engine) GET(path string, hander HandleFunc) {
+func (e *Engine) GET(path string, hander HandlerFunc) {
 	e.addRoute("GET", path, hander)
 }
 
 // 封装POST
-func (e *Engine) POST(path string, hander HandleFunc) {
+func (e *Engine) POST(path string, hander HandlerFunc) {
 	e.addRoute("POST", path, hander)
 }
 
@@ -41,15 +38,7 @@ func (e *Engine) Run(addr string) (err error) {
 
 // 实现ServeHTTP接口
 func (e *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	//获取方法-url路径
-	key := req.Method + "-" + req.URL.Path
-	if handler, ok := e.router[key]; ok {
-		t1 := time.Now()
-		handler(w, req)
-		t2 := time.Now()
-		fmt.Printf("[%s] %s %vms\n", req.Method, req.URL.Path, (t2.Nanosecond()-t1.Nanosecond())/1e6)
-	} else {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, "404 NOT FOUND:%s", key)
-	}
+
+	c := NewContext(w, req)
+	e.router.handle(c)
 }
