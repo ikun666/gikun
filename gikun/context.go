@@ -10,10 +10,13 @@ type H map[string]any
 
 // gikun context
 type Context struct {
-	Writer     http.ResponseWriter
-	Req        *http.Request
-	Path       string
-	Method     string
+	Writer http.ResponseWriter
+	Req    *http.Request
+
+	Path   string
+	Method string
+	Params map[string]string //解析后的参数
+
 	StatusCode int
 }
 
@@ -25,6 +28,12 @@ func NewContext(w http.ResponseWriter, req *http.Request) *Context {
 		Path:   req.URL.Path,
 		Method: req.Method,
 	}
+}
+
+// 获取解析路由参数
+func (c *Context) Param(key string) string {
+	value := c.Params[key]
+	return value
 }
 
 // 获取POST参数
