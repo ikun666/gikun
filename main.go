@@ -23,10 +23,23 @@ func HTML(c *gikun.Context) {
 }
 func main() {
 	r := gikun.New()
-	r.GET("/hello/:name", Hello)
-	r.GET("/json", JSON)
-	r.POST("/data/*data", Data)
-	r.POST("/html", HTML)
+	v1 := r.Group("/v1")
+	{
+		v1.GET("/hello/:name", Hello)
+		v1.POST("/html", HTML)
+	}
+	v2 := r.Group("/v2")
+	{
+		v2.GET("/json", JSON)
+		v2.POST("/data/*data", Data)
+	}
+
+	v3 := v2.Group("/v3")
+	{
+		v3.GET("/hello/:name", Hello)
+		v3.POST("/data/*data", Data)
+	}
+
 	err := r.Run(":8080")
 	if err != nil {
 		fmt.Println(err)
