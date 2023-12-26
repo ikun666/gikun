@@ -7,13 +7,22 @@ type RouterGroup struct {
 	router      *router       //全部路由
 }
 
+// 使用中间件
+func (g *RouterGroup) Use(handlers ...HandlerFunc) *RouterGroup {
+	g.middlewares = append(g.middlewares, handlers...)
+	return g
+}
+
+// 分组
 func (g *RouterGroup) Group(prefix string) *RouterGroup {
-	return &RouterGroup{
+	group := &RouterGroup{
 		prefix:      g.prefix + prefix,
-		middlewares: g.middlewares,
+		middlewares: make([]HandlerFunc, 0),
 		engine:      g.engine,
 		router:      g.router,
 	}
+	g.engine.groups = append(g.engine.groups, group)
+	return group
 }
 
 func (g *RouterGroup) addRoute(method, pattern string, handler HandlerFunc) {

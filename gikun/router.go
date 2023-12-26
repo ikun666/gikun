@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type router struct {
@@ -83,11 +82,18 @@ func (r *router) handle(c *Context) {
 	if node != nil {
 		c.Params = params
 		key := c.Method + "-" + node.pattern
-		t1 := time.Now()
-		r.handlers[key](c)
-		t2 := time.Now()
-		log.Printf("[%s] %s %dms\n", c.Method, c.Path, (t2.Nanosecond()-t1.Nanosecond())/1e6)
+		//将handler加入中间件handler最后
+		c.handler = append(c.handler, r.handlers[key])
+		// t1 := time.Now()
+		// r.handlers[key](c)
+		// t2 := time.Now()
+		// log.Printf("[%s] %s %dms\n", c.Method, c.Path, (t2.Nanosecond()-t1.Nanosecond())/1e6)
 	} else {
-		c.SendString(http.StatusNotFound, fmt.Sprintf("404 NOT FOUND: %s\n", c.Path))
+		// c.SendString(http.StatusNotFound, fmt.Sprintf("404 NOT FOUND: %s\n", c.Path))
+		c.handler = append(c.handler, func(ctx *Context) {
+			c.SendString(http.StatusNotFound, fmt.Sprintf("404 NOT FOUND: %s\n", c.Path))
+		})
 	}
+	//从中间件开始到最后的业务handler
+	c.Next()
 }

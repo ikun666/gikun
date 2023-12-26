@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/ikun666/gikun/gikun"
 )
@@ -21,14 +23,22 @@ func Data(c *gikun.Context) {
 func HTML(c *gikun.Context) {
 	c.SendHTML(203, "<!DOCTYPE html><html><head><meta charset='utf-8'><title>ZONGXP</title></head><body><p>gikun 家人们，太强了</p></body></html>")
 }
+func Logger(c *gikun.Context) {
+	t := time.Now()
+	c.Next()
+	log.Printf("[%d] %s in %v\n", c.StatusCode, c.Req.RequestURI, time.Since(t))
+}
+func TestFunc(c *gikun.Context) {
+	log.Printf("%s\n", c.Req.RequestURI)
+}
 func main() {
 	r := gikun.New()
-	v1 := r.Group("/v1")
+	v1 := r.Group("/v1").Use(Logger)
 	{
 		v1.GET("/hello/:name", Hello)
 		v1.POST("/html", HTML)
 	}
-	v2 := r.Group("/v2")
+	v2 := r.Group("/v2").Use(TestFunc)
 	{
 		v2.GET("/json", JSON)
 		v2.POST("/data/*data", Data)

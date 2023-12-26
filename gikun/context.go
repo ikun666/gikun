@@ -10,14 +10,21 @@ type H map[string]any
 
 // gikun context
 type Context struct {
+	//原始http参数
 	Writer http.ResponseWriter
 	Req    *http.Request
 
+	//请求参数
 	Path   string
 	Method string
 	Params map[string]string //解析后的参数
 
+	//响应状态
 	StatusCode int
+
+	//中间件
+	handler []HandlerFunc
+	index   int //记录运行到第几个handler
 }
 
 // 创建Context实例
@@ -27,6 +34,18 @@ func NewContext(w http.ResponseWriter, req *http.Request) *Context {
 		Req:    req,
 		Path:   req.URL.Path,
 		Method: req.Method,
+		index:  -1,
+	}
+}
+
+// Next() 转到下一个中间件
+func (c *Context) Next() {
+	//确保每次都会++
+	c.index++
+	l := len(c.handler)
+	for ; c.index < l; c.index++ {
+		//执行handler没有Next()也能++
+		c.handler[c.index](c)
 	}
 }
 
