@@ -27,6 +27,21 @@ func New() *Engine {
 	engine.groups = append(engine.groups, engine.RouterGroup)
 	return engine
 }
+func Default() *Engine {
+	engine := &Engine{
+		groups: make([]*RouterGroup, 0),
+	}
+	engine.RouterGroup = &RouterGroup{
+		prefix:      "",
+		middlewares: make([]HandlerFunc, 0),
+		engine:      engine,
+		router:      newRouter(),
+	}
+	//engine为根分组
+	engine.groups = append(engine.groups, engine.RouterGroup)
+	engine.Use(Recovery())
+	return engine
+}
 
 // // 添加路由
 // func (e *Engine) addRoute(method, path string, hander HandlerFunc) {
